@@ -11,7 +11,7 @@ Expo Router screen
       -> client API adapter
         -> Bun server
           -> deterministic catalog filter
-          -> OpenAI Responses API
+          -> AI SDK Core / OpenAI Responses API
           -> schema and budget validation
 ```
 

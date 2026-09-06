@@ -9,6 +9,7 @@ AI tools were used as an engineering aid, with every generated artifact reviewed
 | Figma Desktop | Visual inspection of supplied frames and completed weekly-plan variant | Compared with parsed source geometry |
 | Local `.fig` parser | Extracted node sizes, colors, typography, positions, and embedded images | Cross-checked against Figma and thumbnail |
 | Official documentation search | Checked Expo 57, Bun, NativeWind, and OpenAI behavior | Sources linked from project documentation |
-| Ephemeral local fixture | Exercised the complete weekly-plan presentation after the supplied key returned HTTP 401 | Not committed; validated seven days and day switching in iOS Simulator |
+| Vercel AI SDK | Generates and validates the structured meal-plan draft from the shared Zod schema | Server-side only; deterministic catalog and budget checks remain authoritative |
+| Ephemeral local fixture | Exercised the weekly-plan presentation before credential rotation | Not committed; later superseded by a successful live AI SDK response |
 
 Conversation logs must be exported separately and redacted before delivery. The supplied API credential, local paths containing personal information, and incidental environment data must not appear in those logs.

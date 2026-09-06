@@ -7,10 +7,10 @@
 - [x] Build the design system, custom font configuration, and reusable UI.
 - [x] Implement the five-screen onboarding and weekly-plan flow.
 - [x] Normalize the complete product catalog without inventing missing nutrition values.
-- [x] Implement a protected Bun/OpenAI workflow with Structured Outputs.
+- [x] Implement a protected Bun/AI SDK Core workflow with OpenAI Structured Outputs.
 - [x] Add deterministic filtering, schema validation, and budget verification.
 - [x] Add unit tests, linting, type checking, secret checks, and CI.
-- [x] Exercise the live workflow with the supplied key; OpenAI currently rejects that credential with HTTP 401.
+- [x] Re-run the complete live workflow after credential rotation and validate the AI SDK structured response.
 - [x] Complete the 393 × 852 iOS simulator comparison and interaction walkthrough.
 - [x] Enable and validate React Compiler, then separate route entries from screen implementations.
 - [x] Correct runtime font loading and rebuild the shared StepHeader from exact Figma geometry.
@@ -20,4 +20,4 @@
 - [x] Create the approved private GitHub repository without publishing project files.
 - [ ] Push after final audit and explicit approval.
 
-The final screen was visually verified with an ephemeral local fixture because the supplied credential cannot currently produce a live response. The fixture is not part of the application or repository.
+The final screen was first verified with an ephemeral local fixture and then exercised with a successful live AI SDK response after credential rotation. The fixture is not part of the application or repository.

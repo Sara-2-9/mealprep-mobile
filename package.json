@@ -11,7 +11,9 @@
     }
   },
   "dependencies": {
+    "@ai-sdk/openai": "4.0.60",
     "@expo/ui": "~57.0.16",
+    "ai": "7.0.93",
     "babel-plugin-react-compiler": "^19.0.0-beta-af1b7da-20250417",
     "expo": "~57.0.20",
     "expo-constants": "~57.0.17",
@@ -24,7 +26,6 @@
     "expo-splash-screen": "~57.0.8",
     "expo-status-bar": "~57.0.1",
     "nativewind": "4.2.6",
-    "openai": "7.10.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
     "react-native-reanimated": "4.5.1",

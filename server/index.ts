@@ -12,7 +12,14 @@ const corsHeaders = {
 };
 
 function upstreamErrorResponse(error: unknown) {
-  const status = typeof error === "object" && error !== null && "status" in error ? Number(error.status) : undefined;
+  const status =
+    typeof error === "object" && error !== null
+      ? "statusCode" in error
+        ? Number(error.statusCode)
+        : "status" in error
+          ? Number(error.status)
+          : undefined
+      : undefined;
   if (status === 401 || status === 403) {
     return { clientMessage: "The configured LLM workflow could not authenticate.", logMessage: `LLM authentication failed (${status}).` };
   }
@@ -34,7 +41,7 @@ const server = Bun.serve({
 
     if (request.method === "POST" && url.pathname === "/meal-plan") {
       try {
-        const plan = await generateMealPlan(await request.json());
+        const plan = await generateMealPlan(await request.json(), request.signal);
         return Response.json(plan, { headers: corsHeaders });
       } catch (error) {
         const clientError = error instanceof ZodError;

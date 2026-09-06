@@ -8,9 +8,9 @@ The development scripts start that API together with Expo and stop both processe
 
 ## Vercel AI SDK evaluation
 
-The Expo AI SDK quickstart targets interactive streaming chat and places provider calls behind an API route. MealPrep performs one non-streaming, schema-constrained generation and already keeps that call on its Bun server. Adding `@ai-sdk/react` to the mobile bundle would not improve this flow and would risk blurring the credential boundary.
+The Expo AI SDK quickstart targets interactive streaming chat and places provider calls behind an API route. MealPrep performs one non-streaming, schema-constrained generation and keeps that call on its Bun server. Adding `@ai-sdk/react` to the mobile bundle would not improve this flow and would risk blurring the credential boundary.
 
-AI SDK Core with `@ai-sdk/openai` could replace the server's direct OpenAI SDK call using `generateText` and `Output.object`. That would be worthwhile if MealPrep needs provider portability, streamed partial plans, or AI SDK middleware. It is not adopted yet because it cannot fix authentication: both SDKs send the same supplied OpenAI credential, which the upstream currently rejects with HTTP 401. The existing direct Responses API integration remains smaller and preserves the current validation pipeline.
+AI SDK Core with `@ai-sdk/openai` is used server-side through `generateText` and `Output.object`. The shared Zod schema is the single source for JSON Schema generation, static output typing, and runtime validation. The OpenAI provider explicitly uses the Responses API with strict JSON Schema mode and response storage disabled. Deterministic checks still verify weekdays, catalog references, and total price because structural validation cannot prove those business invariants.
 
 ## NativeWind and exact geometry
 
@@ -42,7 +42,7 @@ Selected preference cards use an accent border and a light green surface derived
 
 ## Supplied LLM credential
 
-The only supplied key is loaded server-side from the ignored `.env` file. A live request reached OpenAI but was rejected with HTTP 401. The application does not substitute another key or silently fall back to mock content; its safe error state is shown instead. A temporary local fixture was used solely for final-screen visual QA.
+The configured key is loaded server-side from the ignored `.env` file. The application does not substitute another key or silently fall back to mock content; upstream failures use the safe error state. After credential rotation, a live AI SDK request completed successfully and passed the shared schema plus all deterministic business checks.
 
 ## One additional feature
 

@@ -1,5 +1,5 @@
-import OpenAI from "openai";
-import { zodTextFormat } from "openai/helpers/zod";
+import { createOpenAI, type OpenAIResponsesProviderOptions } from "@ai-sdk/openai";
+import { generateText, Output } from "ai";
 
 import {
   MealPlanDraftSchema,
@@ -12,7 +12,7 @@ import { selectCandidateProducts } from "./catalog";
 
 const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
-export async function generateMealPlan(payload: unknown): Promise<MealPlan> {
+export async function generateMealPlan(payload: unknown, abortSignal?: AbortSignal): Promise<MealPlan> {
   const input = MealPlanRequestSchema.parse(payload);
   const apiKey = Bun.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured on the Bun server.");
@@ -29,10 +29,11 @@ export async function generateMealPlan(payload: unknown): Promise<MealPlan> {
     nutrition: product.nutrition,
   }));
 
-  const client = new OpenAI({ apiKey });
-  const response = await client.responses.parse({
-    model: Bun.env.OPENAI_MODEL ?? "gpt-5-mini",
-    instructions: [
+  const openai = createOpenAI({ apiKey });
+  const { output: draft } = await generateText({
+    abortSignal,
+    model: openai.responses(Bun.env.OPENAI_MODEL ?? "gpt-5-mini"),
+    system: [
       "You are a pragmatic meal planner using only the supplied grocery catalog.",
       "Return exactly one dinner for each day Monday through Sunday.",
       "Use only exact product IDs from the candidate list and reuse products across meals to reduce waste.",
@@ -40,12 +41,19 @@ export async function generateMealPlan(payload: unknown): Promise<MealPlan> {
       "Respect every dietary need and nutritional goal. Never invent prices, products, or IDs.",
       "Write concise, safe cooking instructions in English.",
     ].join(" "),
-    input: JSON.stringify({ preferences: input, candidateProducts: compactProducts }),
-    text: { format: zodTextFormat(MealPlanDraftSchema, "weekly_meal_plan") },
+    output: Output.object({
+      description: "A seven-day dinner plan constrained to the supplied grocery catalog and weekly budget.",
+      name: "weekly_meal_plan",
+      schema: MealPlanDraftSchema,
+    }),
+    prompt: JSON.stringify({ preferences: input, candidateProducts: compactProducts }),
+    providerOptions: {
+      openai: {
+        store: false,
+        strictJsonSchema: true,
+      } satisfies OpenAIResponsesProviderOptions,
+    },
   });
-
-  const draft = response.output_parsed;
-  if (!draft) throw new Error("The model returned no structured meal plan.");
 
   const returnedDays = new Set(draft.meals.map((meal) => meal.day));
   if (returnedDays.size !== weekDays.length || weekDays.some((day) => !returnedDays.has(day))) {

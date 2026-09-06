@@ -10,7 +10,7 @@ MealPrep is a cross-platform Expo proof of concept that creates a seven-day meal
 - Bun 1.4.2 for package management, scripts, tests, and the API server
 - NativeWind for design tokens and utility styling
 - React Native `StyleSheet` for exact Figma geometry and dynamic native styles
-- OpenAI Responses API with Structured Outputs
+- Vercel AI SDK Core with the OpenAI Responses provider and Zod Structured Outputs
 - Zod validation at every network boundary
 
 Bun is not the on-device JavaScript runtime. The native application runs through React Native/Hermes; Bun powers development tooling and the protected server endpoint.
