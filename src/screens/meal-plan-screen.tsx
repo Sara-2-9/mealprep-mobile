@@ -9,19 +9,25 @@ import { MealPlanLoading } from "@/components/ui/meal-plan-loading";
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { colors } from "@/design-system/tokens";
 import { useMealPlan } from "@/features/meal-plan/use-meal-plan";
+import { useMealPlanWizard } from "@/features/wizard/wizard-context";
 
 const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export function MealPlanScreen() {
   const { replace } = useRouter();
+  const { reset } = useMealPlanWizard();
   const [activeDay, setActiveDay] = useState(0);
   const { data, error, retry, status } = useMealPlan();
   const activeMeal = data?.meals[activeDay];
+  const startOver = () => {
+    reset();
+    replace("/");
+  };
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
       <View style={styles.headerRow}>
-        <Pressable accessibilityLabel="Start over" accessibilityRole="button" hitSlop={10} onPress={() => replace("/")}>
+        <Pressable accessibilityLabel="Start over" accessibilityRole="button" hitSlop={10} onPress={startOver}>
           <AppText style={styles.restart}>↻</AppText>
         </Pressable>
         <AppText style={styles.title} weight="semibold">Bon appetit!</AppText>
@@ -53,7 +59,7 @@ export function MealPlanScreen() {
 
       <View style={styles.planCard}>
         {status === "loading" ? <MealPlanLoading /> : null}
-        {status === "success" && activeMeal ? <MealDetails meal={activeMeal} /> : null}
+        {status === "success" && activeMeal ? <MealDetails key={activeMeal.day} meal={activeMeal} /> : null}
         {status === "error" ? (
           <View style={styles.error}>
             <AppText style={styles.errorTitle} weight="semibold">We couldn’t build your plan.</AppText>

@@ -44,6 +44,7 @@ const server = Bun.serve({
         const plan = await generateMealPlan(await request.json(), request.signal);
         return Response.json(plan, { headers: corsHeaders });
       } catch (error) {
+        if (request.signal.aborted) return new Response(null, { headers: corsHeaders, status: 499 });
         const clientError = error instanceof ZodError;
         const upstreamError = upstreamErrorResponse(error);
         console.error(`[meal-plan] ${clientError ? "Invalid request payload." : upstreamError.logMessage}`);
