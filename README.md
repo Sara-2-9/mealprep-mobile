@@ -32,17 +32,13 @@ bun run catalog:build
 
 Set the provided API key as `OPENAI_API_KEY` in `.env`. Never use an `EXPO_PUBLIC_` prefix for this value.
 
-Start the protected API server:
-
-```sh
-bun run server
-```
-
-Start the Expo client in another terminal:
+Start the Expo client and protected Bun API together:
 
 ```sh
 bun run ios
 ```
+
+The `start`, `ios`, `android`, and `web` scripts manage both processes and stop them together. Use `bun run expo:start` only when the API is already running separately.
 
 For a physical device, set `EXPO_PUBLIC_API_BASE_URL` to the development machine's LAN address rather than `localhost`.
 

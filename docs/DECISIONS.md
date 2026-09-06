@@ -4,6 +4,14 @@
 
 The brief permits an all-client implementation for simplicity, but the supplied API key cannot be protected inside an installed mobile application. MealPrep therefore uses a small Bun server. The user-facing app remains a standalone Expo application and communicates with a single `/meal-plan` endpoint.
 
+The development scripts start that API together with Expo and stop both processes together. This prevents the final screen from failing simply because Metro was started without its local API dependency. The raw `expo:start` command remains available for cases where the API is already managed externally.
+
+## Vercel AI SDK evaluation
+
+The Expo AI SDK quickstart targets interactive streaming chat and places provider calls behind an API route. MealPrep performs one non-streaming, schema-constrained generation and already keeps that call on its Bun server. Adding `@ai-sdk/react` to the mobile bundle would not improve this flow and would risk blurring the credential boundary.
+
+AI SDK Core with `@ai-sdk/openai` could replace the server's direct OpenAI SDK call using `generateText` and `Output.object`. That would be worthwhile if MealPrep needs provider portability, streamed partial plans, or AI SDK middleware. It is not adopted yet because it cannot fix authentication: both SDKs send the same supplied OpenAI credential, which the upstream currently rejects with HTTP 401. The existing direct Responses API integration remains smaller and preserves the current validation pipeline.
+
 ## NativeWind and exact geometry
 
 NativeWind owns reusable design tokens and utility layout. Exact Figma measurements, dynamic thumb positioning, platform-specific safe areas, and animation values use React Native styles. This hybrid avoids unreadable arbitrary utility strings while retaining a coherent design system.

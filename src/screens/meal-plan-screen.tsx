@@ -15,7 +15,8 @@ const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 export function MealPlanScreen() {
   const { replace } = useRouter();
   const [activeDay, setActiveDay] = useState(0);
-  const plan = useMealPlan();
+  const { data, error, retry, status } = useMealPlan();
+  const activeMeal = data?.meals[activeDay];
 
   return (
     <SafeAreaView edges={["top"]} style={styles.screen}>
@@ -30,7 +31,7 @@ export function MealPlanScreen() {
       <View style={styles.costCard}>
         <AppText style={styles.costLabel} weight="medium">Est. cost</AppText>
         <View style={styles.costRow}>
-          <AppText style={styles.cost} weight="medium">€{plan.data?.estimatedCost.toFixed(0) ?? "—"}</AppText>
+          <AppText style={styles.cost} weight="medium">€{data?.estimatedCost.toFixed(0) ?? "—"}</AppText>
           <AppText style={styles.perWeek} weight="medium">/ week</AppText>
         </View>
       </View>
@@ -40,7 +41,7 @@ export function MealPlanScreen() {
           <Pressable
             accessibilityRole="tab"
             accessibilityState={{ selected: activeDay === index }}
-            disabled={plan.status !== "success"}
+            disabled={status !== "success"}
             key={day}
             onPress={() => setActiveDay(index)}
             style={[styles.day, activeDay === index && styles.activeDay]}
@@ -51,13 +52,13 @@ export function MealPlanScreen() {
       </View>
 
       <View style={styles.planCard}>
-        {plan.status === "loading" ? <MealPlanLoading /> : null}
-        {plan.status === "success" ? <MealDetails meal={plan.data.meals[activeDay]!} /> : null}
-        {plan.status === "error" ? (
+        {status === "loading" ? <MealPlanLoading /> : null}
+        {status === "success" && activeMeal ? <MealDetails meal={activeMeal} /> : null}
+        {status === "error" ? (
           <View style={styles.error}>
             <AppText style={styles.errorTitle} weight="semibold">We couldn’t build your plan.</AppText>
-            <AppText style={styles.errorCopy}>{plan.error}</AppText>
-            <PrimaryButton label="Try again" onPress={plan.retry} />
+            <AppText accessibilityLiveRegion="polite" style={styles.errorCopy}>{error}</AppText>
+            <PrimaryButton label="Try again" onPress={retry} />
           </View>
         ) : null}
       </View>

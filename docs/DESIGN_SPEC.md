@@ -24,7 +24,7 @@ Typography uses the supplied Promo family: Regular, Medium, Semi Bold, and Bold.
 - Progress row: `353 × 28`, with a 10-point gap.
 - Back surface: `28 × 28`, `#F2F2F7`, fully rounded, containing the 20-point Figma chevron frame.
 - Progress track: `315 × 20`, `#F2F2F7`, fully rounded.
-- Progress fill: accent green at 25%, 50%, or 75%, with the source 6-point white highlight at 50% opacity.
+- Progress fill: accent green at 25%, 50%, or 75%, with the source 6-point white highlight at `y=3` and 50% opacity.
 - Title: Promo Semi Bold, 32/45, aligned to the left edge of the content grid.
 
 ## Screens
