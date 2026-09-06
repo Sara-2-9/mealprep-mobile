@@ -5,8 +5,12 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { WizardProvider } from "@/features/wizard/wizard-context";
+import { useAppFonts } from "@/hooks/use-app-fonts";
 
 export default function RootLayout() {
+  const fontsLoaded = useAppFonts();
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaProvider>
       <WizardProvider>
@@ -16,4 +20,3 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
-

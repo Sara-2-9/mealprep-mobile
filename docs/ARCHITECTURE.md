@@ -15,7 +15,23 @@ Expo Router screen
           -> schema and budget validation
 ```
 
-Route components compose presentational UI and call feature hooks. They do not read the product catalog or invoke OpenAI directly. Domain modules contain pure types, schemas, and selection rules. The API key exists only in the Bun process environment.
+Files in `src/app` are route-only entry points. They delegate rendering to `src/screens`, where screens compose presentational UI and call feature hooks. Screens do not read the product catalog or invoke OpenAI directly. Domain modules contain pure types, schemas, and selection rules. The API key exists only in the Bun process environment.
+
+```text
+src/
+  app/             route-only Expo Router entries
+  screens/         screen composition and navigation wiring
+  components/      reusable UI and illustrations
+  features/        feature-scoped state and orchestration hooks
+  hooks/           application-wide hooks
+  domain/          pure schemas, types, and business rules
+  services/        client-side API adapters
+  design-system/   tokens, typography, and asset mappings
+server/             Bun API and catalog orchestration
+tests/              cross-boundary unit tests
+```
+
+The route layer stays deliberately small so file-based navigation metadata does not become coupled to screen implementation. Styles remain colocated with their owning components; shared primitives and tokens move upward only when reused.
 
 ## Wizard state
 
@@ -30,13 +46,14 @@ The server validates the request, filters all 3,295 normalized products, and bui
 ## Rendering performance
 
 - Expo Router uses a native stack.
+- React Compiler automatically memoizes eligible components, hooks, values, and callbacks.
+- Manual `useMemo`, `useCallback`, and `memo` are avoided unless profiling demonstrates a compiler escape hatch is required.
 - The large catalog never enters the mobile bundle's initial render path.
 - High-frequency drag state is isolated from the navigation tree.
-- Shared components use fixed Figma geometry and stable callbacks.
+- Shared components use fixed Figma geometry and narrowly scoped props.
 - Decorative motion uses transform and opacity rather than layout animation.
 - `expo-image` renders the supplied raster asset.
 
 ## Error behavior
 
 The final screen represents loading, success, and recoverable error states. Network requests are aborted on unmount. Invalid structured output, unavailable credentials, impossible preference combinations, and over-budget baskets are surfaced as retryable failures rather than silently replaced with fabricated data.
-

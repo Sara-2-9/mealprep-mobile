@@ -16,7 +16,16 @@ The original `.fig` file was inspected in Figma Desktop and decoded locally to v
 | Selection-card radius | `20` |
 | Primary-button size | `353 × 72` |
 
-Typography uses the supplied Promo family: Regular, Medium, Semi Bold, and Bold. Fonts are embedded at build time through the Expo Font config plugin.
+Typography uses the supplied Promo family: Regular, Medium, Semi Bold, and Bold. Production builds embed the fonts through the Expo Font config plugin. The root font hook also loads the same PostScript names at runtime so Expo Go and web previews render the design accurately; the splash screen remains visible until loading completes.
+
+## Shared StepHeader
+
+- Container: `353 × 93`, with a 20-point gap between progress row and title.
+- Progress row: `353 × 28`, with a 10-point gap.
+- Back surface: `28 × 28`, `#F2F2F7`, fully rounded, containing the 20-point Figma chevron frame.
+- Progress track: `315 × 20`, `#F2F2F7`, fully rounded.
+- Progress fill: accent green at 25%, 50%, or 75%, with the source 6-point white highlight at 50% opacity.
+- Title: Promo Semi Bold, 32/45, aligned to the left edge of the content grid.
 
 ## Screens
 
@@ -60,4 +69,3 @@ Typography uses the supplied Promo family: Regular, Medium, Semi Bold, and Bold.
 ## Verification method
 
 Each implemented screen must be captured at 393 × 852, compared with the source frame using an opacity overlay or image diff, and checked separately on iOS and Android. Intentional differences must be recorded in `DECISIONS.md`.
-

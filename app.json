@@ -38,9 +38,11 @@
           ]
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-splash-screen"
     ],
     "experiments": {
+      "reactCompiler": true,
       "typedRoutes": true
     }
   }

@@ -5,6 +5,7 @@ MealPrep is a cross-platform Expo proof of concept that creates a seven-day meal
 ## Technology
 
 - Expo SDK 57, React Native 0.86, and Expo Router
+- React Compiler for automatic component and hook memoization
 - TypeScript in strict mode
 - Bun 1.4.2 for package management, scripts, tests, and the API server
 - NativeWind for design tokens and utility styling
@@ -53,6 +54,12 @@ bun run validate
 
 The validation pipeline checks for common secret patterns, runs ESLint and TypeScript, executes unit tests, and invokes Expo Doctor.
 
+To audit React Compiler coverage after changing component structure:
+
+```sh
+bunx react-compiler-healthcheck@latest
+```
+
 ## Commit convention
 
 Every commit uses [Conventional Commits](https://www.conventionalcommits.org/), for example:
@@ -83,4 +90,3 @@ Pull requests also validate every commit message in CI.
 ## Confidential inputs
 
 The original take-home directory is intentionally ignored by Git because the PDF contains an API credential and the redistribution rights of the source design/font bundle have not been established. Only the minimum app-ready assets and a normalized catalog are copied into the project.
-

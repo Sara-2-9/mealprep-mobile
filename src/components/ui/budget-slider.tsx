@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import { PanResponder, StyleSheet, View } from "react-native";
 
 import { colors } from "@/design-system/tokens";
@@ -16,32 +15,19 @@ type BudgetSliderProps = {
 
 export function BudgetSlider({ maximum = 150, minimum = 25, onChange, step = 1, value }: BudgetSliderProps) {
   const usableWidth = TRACK_WIDTH - THUMB_SIZE;
-  const valueToX = useCallback(
-    (nextValue: number) => ((nextValue - minimum) / (maximum - minimum)) * usableWidth,
-    [maximum, minimum, usableWidth],
-  );
-  const xToValue = useCallback(
-    (x: number) => {
-      const raw = minimum + (Math.max(0, Math.min(usableWidth, x)) / usableWidth) * (maximum - minimum);
-      return Math.max(minimum, Math.min(maximum, Math.round(raw / step) * step));
-    },
-    [maximum, minimum, step, usableWidth],
-  );
-  const updateFromTouch = useCallback(
-    (locationX: number) => onChange(xToValue(locationX - THUMB_SIZE / 2)),
-    [onChange, xToValue],
-  );
+  const valueToX = (nextValue: number) => ((nextValue - minimum) / (maximum - minimum)) * usableWidth;
+  const xToValue = (x: number) => {
+    const raw = minimum + (Math.max(0, Math.min(usableWidth, x)) / usableWidth) * (maximum - minimum);
+    return Math.max(minimum, Math.min(maximum, Math.round(raw / step) * step));
+  };
+  const updateFromTouch = (locationX: number) => onChange(xToValue(locationX - THUMB_SIZE / 2));
 
-  const responder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: (event) => updateFromTouch(event.nativeEvent.locationX),
-        onPanResponderMove: (event) => updateFromTouch(event.nativeEvent.locationX),
-      }),
-    [updateFromTouch],
-  );
+  const responder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => updateFromTouch(event.nativeEvent.locationX),
+    onPanResponderMove: (event) => updateFromTouch(event.nativeEvent.locationX),
+  });
 
   const thumbX = valueToX(value);
 

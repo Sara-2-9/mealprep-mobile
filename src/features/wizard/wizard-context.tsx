@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useReducer, type PropsWithChildren } from "react";
+import { createContext, useContext, useReducer, type PropsWithChildren } from "react";
 
 import type { DietaryNeed, NutritionalGoal } from "@/domain/preferences";
 
@@ -44,21 +44,11 @@ const WizardContext = createContext<WizardContextValue | null>(null);
 
 export function WizardProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const setWeeklyBudget = useCallback((value: number) => dispatch({ type: "budgetChanged", value }), []);
-  const setDietaryNeeds = useCallback(
-    (value: DietaryNeed[]) => dispatch({ type: "dietaryNeedsChanged", value }),
-    [],
-  );
-  const setNutritionalGoals = useCallback(
-    (value: NutritionalGoal[]) => dispatch({ type: "nutritionalGoalsChanged", value }),
-    [],
-  );
-  const reset = useCallback(() => dispatch({ type: "reset" }), []);
-
-  const value = useMemo(
-    () => ({ ...state, setWeeklyBudget, setDietaryNeeds, setNutritionalGoals, reset }),
-    [state, setWeeklyBudget, setDietaryNeeds, setNutritionalGoals, reset],
-  );
+  const setWeeklyBudget = (value: number) => dispatch({ type: "budgetChanged", value });
+  const setDietaryNeeds = (value: DietaryNeed[]) => dispatch({ type: "dietaryNeedsChanged", value });
+  const setNutritionalGoals = (value: NutritionalGoal[]) => dispatch({ type: "nutritionalGoalsChanged", value });
+  const reset = () => dispatch({ type: "reset" });
+  const value = { ...state, setWeeklyBudget, setDietaryNeeds, setNutritionalGoals, reset };
 
   return <WizardContext.Provider value={value}>{children}</WizardContext.Provider>;
 }
@@ -68,4 +58,3 @@ export function useMealPlanWizard() {
   if (!context) throw new Error("useMealPlanWizard must be used inside WizardProvider");
   return context;
 }
-
