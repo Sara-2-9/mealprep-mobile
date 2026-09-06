@@ -1,0 +1,42 @@
+# Dependencies and generated Expo artifacts
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+coverage/
+*.tsbuildinfo
+
+# Native build directories and credentials
+/ios/
+/android/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Confidential and unvetted take-home source material
+blackboard-mobile-engineer-take-home/
+
+# Artifacts requiring manual secret redaction
+conversation-logs/
+recordings/
+
+# Tooling, logs, and operating-system files
+.metro-health-check*
+.DS_Store
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
