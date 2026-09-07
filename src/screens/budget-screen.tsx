@@ -1,4 +1,5 @@
-import { useRouter } from "expo-router";
+import { useEffect } from "react";
+import { useNavigation, useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/ui/app-text";
@@ -11,7 +12,17 @@ import { useMealPlanWizard } from "@/features/wizard/wizard-context";
 
 export function BudgetScreen() {
   const { push } = useRouter();
+  const rootNavigation = useNavigation("/");
   const { setWeeklyBudget, weeklyBudget } = useMealPlanWizard();
+  const setBackGestureEnabled = (gestureEnabled: boolean) =>
+    rootNavigation.setOptions({ gestureEnabled });
+  const updateBudget = (value: number) =>
+    setWeeklyBudget(Math.round(value / 5) * 5);
+
+  useEffect(
+    () => () => rootNavigation.setOptions({ gestureEnabled: true }),
+    [rootNavigation],
+  );
 
   return (
     <WizardScreen
@@ -25,8 +36,9 @@ export function BudgetScreen() {
       </View>
       <View style={styles.slider}>
         <BudgetSlider
-          onChange={setWeeklyBudget}
-          step={5}
+          onChange={updateBudget}
+          onInteractionEnd={() => setBackGestureEnabled(true)}
+          onInteractionStart={() => setBackGestureEnabled(false)}
           value={weeklyBudget}
         />
       </View>

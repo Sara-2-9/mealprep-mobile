@@ -15,7 +15,7 @@ type WizardAction =
   | { type: "reset" };
 
 const initialState: WizardState = {
-  weeklyBudget: 82,
+  weeklyBudget: 80,
   dietaryNeeds: [],
   nutritionalGoals: [],
 };

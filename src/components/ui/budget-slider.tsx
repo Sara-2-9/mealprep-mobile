@@ -1,48 +1,99 @@
-import { PanResponder, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Animated, PanResponder, StyleSheet, View } from "react-native";
 
 import { colors } from "@/design-system/tokens";
 
 const TRACK_WIDTH = 345;
 const THUMB_SIZE = 64;
 
+function valueToPosition(value: number, minimum: number, maximum: number) {
+  const usableWidth = TRACK_WIDTH - THUMB_SIZE;
+  return ((value - minimum) / (maximum - minimum)) * usableWidth;
+}
+
 type BudgetSliderProps = {
+  accessibilityStep?: number;
   maximum?: number;
   minimum?: number;
   onChange: (value: number) => void;
-  step?: number;
+  onInteractionEnd?: () => void;
+  onInteractionStart?: () => void;
   value: number;
 };
 
 export function BudgetSlider({
+  accessibilityStep = 5,
   maximum = 150,
   minimum = 25,
   onChange,
-  step = 1,
+  onInteractionEnd,
+  onInteractionStart,
   value,
 }: BudgetSliderProps) {
   const usableWidth = TRACK_WIDTH - THUMB_SIZE;
-  const valueToX = (nextValue: number) =>
-    ((nextValue - minimum) / (maximum - minimum)) * usableWidth;
-  const xToValue = (x: number) => {
-    const raw =
-      minimum +
-      (Math.max(0, Math.min(usableWidth, x)) / usableWidth) *
-        (maximum - minimum);
-    return Math.max(minimum, Math.min(maximum, Math.round(raw / step) * step));
-  };
-  const updateFromTouch = (locationX: number) =>
-    onChange(xToValue(locationX - THUMB_SIZE / 2));
+  const [thumbX] = useState(
+    () => new Animated.Value(valueToPosition(value, minimum, maximum)),
+  );
+  const [controller] = useState(() => {
+    let dragging = false;
+    let gestureStartX = valueToPosition(value, minimum, maximum);
+    const clampX = (x: number) => Math.max(0, Math.min(usableWidth, x));
+    const updateX = (x: number) => {
+      const nextX = clampX(x);
+      thumbX.setValue(nextX);
+      const nextValue =
+        minimum + (nextX / usableWidth) * (maximum - minimum);
+      onChange(nextValue);
+    };
+    const endInteraction = () => {
+      dragging = false;
+      onInteractionEnd?.();
+    };
+    const responder = PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: (event) => {
+        dragging = true;
+        thumbX.stopAnimation();
+        gestureStartX = clampX(
+          event.nativeEvent.locationX - THUMB_SIZE / 2,
+        );
+        updateX(gestureStartX);
+      },
+      onPanResponderMove: (_event, gestureState) =>
+        updateX(gestureStartX + gestureState.dx),
+      onPanResponderRelease: endInteraction,
+      onPanResponderTerminate: endInteraction,
+      onPanResponderTerminationRequest: () => false,
+      onShouldBlockNativeResponder: () => true,
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+    });
 
-  const responder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (event) =>
-      updateFromTouch(event.nativeEvent.locationX),
-    onPanResponderMove: (event) => updateFromTouch(event.nativeEvent.locationX),
+    return {
+      isDragging: () => dragging,
+      panHandlers: responder.panHandlers,
+    };
   });
 
-  const thumbX = valueToX(value);
-  const fillWidth = thumbX + THUMB_SIZE / 2;
+  useEffect(() => {
+    if (controller.isDragging()) return;
+    const animation = Animated.timing(thumbX, {
+      duration: 120,
+      toValue: valueToPosition(value, minimum, maximum),
+      useNativeDriver: true,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [controller, maximum, minimum, thumbX, value]);
+
+  const fillScaleX = thumbX.interpolate({
+    inputRange: [0, usableWidth],
+    outputRange: [
+      THUMB_SIZE / 2 / TRACK_WIDTH,
+      (usableWidth + THUMB_SIZE / 2) / TRACK_WIDTH,
+    ],
+  });
 
   return (
     <View
@@ -58,20 +109,21 @@ export function BudgetSlider({
       onAccessibilityAction={(event) =>
         onChange(
           event.nativeEvent.actionName === "increment"
-            ? Math.min(maximum, value + step)
-            : Math.max(minimum, value - step),
+            ? Math.min(maximum, value + accessibilityStep)
+            : Math.max(minimum, value - accessibilityStep),
         )
       }
+      onTouchStart={onInteractionStart}
       style={styles.wrapper}
-      {...responder.panHandlers}
+      {...controller.panHandlers}
     >
       <View style={styles.track}>
-        <View
+        <Animated.View
           pointerEvents="none"
-          style={[styles.fill, { width: fillWidth }]}
+          style={[styles.fill, { transform: [{ scaleX: fillScaleX }] }]}
         />
       </View>
-      <View
+      <Animated.View
         pointerEvents="none"
         style={[styles.thumb, { transform: [{ translateX: thumbX }] }]}
       />
@@ -94,6 +146,8 @@ const styles = StyleSheet.create({
     borderCurve: "continuous",
     borderRadius: 999,
     height: 16,
+    transformOrigin: "left center",
+    width: TRACK_WIDTH,
   },
   thumb: {
     backgroundColor: colors.surface,

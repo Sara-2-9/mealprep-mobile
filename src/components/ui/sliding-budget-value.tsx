@@ -7,26 +7,31 @@ import { fontFamilies } from "@/design-system/typography";
 
 type SlidingBudgetValueProps = { value: number };
 
-function SlidingText({ value }: SlidingBudgetValueProps) {
-  const [translateY] = useState(() => new Animated.Value(48));
+export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
+  const [gradientProgress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    const animation = Animated.timing(translateY, {
-      duration: 180,
-      easing: Easing.out(Easing.cubic),
-      toValue: 0,
-      useNativeDriver: true,
-    });
+    const animation = Animated.loop(
+      Animated.timing(gradientProgress, {
+        duration: 3600,
+        easing: Easing.linear,
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    );
     animation.start();
     return () => animation.stop();
-  }, [translateY]);
+  }, [gradientProgress]);
 
-  const opacity = translateY.interpolate({ inputRange: [0, 48], outputRange: [1, 0] });
-  return <Animated.Text style={[styles.value, styles.layer, { opacity, transform: [{ translateY }] }]}>€{value}</Animated.Text>;
-}
-
-export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
-  const mask = <View style={styles.mask}><SlidingText key={value} value={value} /></View>;
+  const translateX = gradientProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 300],
+  });
+  const mask = (
+    <View style={styles.mask}>
+      <Animated.Text style={styles.value}>€{value}</Animated.Text>
+    </View>
+  );
 
   return (
     <MaskedView
@@ -35,13 +40,17 @@ export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
       maskElement={mask}
       style={styles.container}
     >
-      <LinearGradient
-        colors={["#1A1A1A", "#1A1A1A", "#34C759", "#1A1A1A", "#1A1A1A"]}
-        end={{ x: 1, y: 0 }}
-        locations={[0, 0.3, 0.5, 0.7, 1]}
-        start={{ x: 0, y: 0 }}
-        style={styles.gradient}
-      />
+      <Animated.View
+        style={[styles.gradientTrack, { transform: [{ translateX }] }]}
+      >
+        <LinearGradient
+          colors={["#1A1A1A", "#34C759", "#1A1A1A", "#34C759", "#1A1A1A"]}
+          end={{ x: 1, y: 0 }}
+          locations={[0, 0.25, 0.5, 0.75, 1]}
+          start={{ x: 0, y: 0 }}
+          style={styles.gradient}
+        />
+      </Animated.View>
     </MaskedView>
   );
 }
@@ -49,7 +58,13 @@ export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
 const styles = StyleSheet.create({
   container: { height: 118, width: 300 },
   gradient: { flex: 1 },
-  layer: { left: 0, position: "absolute", right: 0, top: 0 },
+  gradientTrack: {
+    bottom: 0,
+    left: -300,
+    position: "absolute",
+    top: 0,
+    width: 600,
+  },
   mask: { backgroundColor: "transparent", flex: 1, overflow: "hidden" },
   value: {
     color: "#000",

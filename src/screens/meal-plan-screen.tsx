@@ -46,20 +46,26 @@ function CostSkeleton() {
 }
 
 type MealPageProps = {
+  cardWidth: number;
   index: number;
   meal: MealPlan["meals"][number];
-  pageWidth: number;
+  pageStep: number;
   scrollX: Animated.Value;
 };
 
-function MealPage({ index, meal, pageWidth, scrollX }: MealPageProps) {
-  const inputRange = [(index - 1) * pageWidth, index * pageWidth, (index + 1) * pageWidth];
+function MealPage({ cardWidth, index, meal, pageStep, scrollX }: MealPageProps) {
+  const inputRange = [(index - 1) * pageStep, index * pageStep, (index + 1) * pageStep];
   const opacity = scrollX.interpolate({ extrapolate: "clamp", inputRange, outputRange: [0.72, 1, 0.72] });
   const scale = scrollX.interpolate({ extrapolate: "clamp", inputRange, outputRange: [0.96, 1, 0.96] });
 
   return (
-    <View style={[styles.page, { width: pageWidth }]}>
-      <Animated.View style={[styles.planCard, { opacity, transform: [{ scale }] }]}>
+    <View style={[styles.page, { width: pageStep }]}>
+      <Animated.View
+        style={[
+          styles.planCard,
+          { opacity, transform: [{ scale }], width: cardWidth },
+        ]}
+      >
         <MealDetails meal={meal} />
       </Animated.View>
     </View>
@@ -69,21 +75,24 @@ function MealPage({ index, meal, pageWidth, scrollX }: MealPageProps) {
 export function MealPlanScreen() {
   const { replace } = useRouter();
   const { reset } = useMealPlanWizard();
-  const { width: pageWidth } = useWindowDimensions();
+  const { width: viewportWidth } = useWindowDimensions();
+  const cardWidth = Math.min(337, viewportWidth - 40);
+  const pageStep = cardWidth + 12;
+  const sideInset = (viewportWidth - cardWidth) / 2;
   const [activeDay, setActiveDay] = useState(0);
   const { data, error, retry, status } = useMealPlan();
   const pagerRef = useRef<ScrollView>(null);
   const [scrollX] = useState(() => new Animated.Value(0));
   const onScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
     listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const nextDay = Math.max(0, Math.min(shortDays.length - 1, Math.round(event.nativeEvent.contentOffset.x / pageWidth)));
+      const nextDay = Math.max(0, Math.min(shortDays.length - 1, Math.round(event.nativeEvent.contentOffset.x / pageStep)));
       setActiveDay((currentDay) => (currentDay === nextDay ? currentDay : nextDay));
     },
     useNativeDriver: true,
   });
   const indicatorTranslateX = scrollX.interpolate({
     extrapolate: "clamp",
-    inputRange: [0, pageWidth * (shortDays.length - 1)],
+    inputRange: [0, pageStep * (shortDays.length - 1)],
     outputRange: [0, DAY_PITCH * (shortDays.length - 1)],
   });
   const startOver = () => {
@@ -92,7 +101,7 @@ export function MealPlanScreen() {
   };
   const selectDay = (index: number) => {
     setActiveDay(index);
-    pagerRef.current?.scrollTo({ animated: true, x: index * pageWidth, y: 0 });
+    pagerRef.current?.scrollTo({ animated: true, x: index * pageStep, y: 0 });
   };
 
   return (
@@ -179,18 +188,24 @@ export function MealPlanScreen() {
           disableIntervalMomentum
           horizontal
           onScroll={onScroll}
-          pagingEnabled
           ref={pagerRef}
           scrollEventThrottle={16}
           showsHorizontalScrollIndicator={false}
+          snapToAlignment="start"
+          snapToInterval={pageStep}
           style={styles.pager}
+          contentContainerStyle={{
+            paddingLeft: sideInset,
+            paddingRight: Math.max(0, sideInset - 12),
+          }}
         >
           {data.meals.map((meal, index) => (
             <MealPage
+              cardWidth={cardWidth}
               index={index}
               key={meal.day}
               meal={meal}
-              pageWidth={pageWidth}
+              pageStep={pageStep}
               scrollX={scrollX}
             />
           ))}
@@ -301,14 +316,13 @@ const styles = StyleSheet.create({
     width: 337,
   },
   pager: { flex: 1, marginTop: 32, width: "100%" },
-  page: { alignItems: "center", flex: 1 },
+  page: { alignItems: "flex-start", flex: 1 },
   planCard: {
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     flex: 1,
     overflow: "hidden",
-    width: 337,
   },
   error: { flex: 1, gap: 14, justifyContent: "center", padding: 24 },
   errorTitle: {
