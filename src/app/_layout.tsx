@@ -2,7 +2,8 @@ import "../../global.css";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Platform } from "react-native";
+import { Platform, StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { WizardProvider } from "@/features/wizard/wizard-context";
@@ -13,22 +14,27 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <SafeAreaProvider>
-      <WizardProvider>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            animation: Platform.OS === "ios" ? "simple_push" : "ios_from_right",
-            animationMatchesGesture: true,
-            contentStyle: { backgroundColor: "#FDFFFB" },
-            fullScreenGestureEnabled: true,
-            fullScreenGestureShadowEnabled: false,
-            gestureDirection: "horizontal",
-            headerShown: false,
-            presentation: "card",
-          }}
-        />
-      </WizardProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <WizardProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              animation:
+                Platform.OS === "ios" ? "simple_push" : "ios_from_right",
+              animationMatchesGesture: true,
+              contentStyle: { backgroundColor: "#FDFFFB" },
+              fullScreenGestureEnabled: true,
+              fullScreenGestureShadowEnabled: false,
+              gestureDirection: "horizontal",
+              headerShown: false,
+              presentation: "card",
+            }}
+          />
+        </WizardProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });

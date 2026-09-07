@@ -1,159 +1,158 @@
-import { useEffect, useState } from "react";
-import { Animated, PanResponder, StyleSheet, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 
 import { colors } from "@/design-system/tokens";
 
 const TRACK_WIDTH = 345;
+const TRACK_HEIGHT = 16;
 const THUMB_SIZE = 64;
-
-function valueToPosition(value: number, minimum: number, maximum: number) {
-  const usableWidth = TRACK_WIDTH - THUMB_SIZE;
-  return ((value - minimum) / (maximum - minimum)) * usableWidth;
-}
+const MIN = 25;
+const MAX = 150;
+const STEP = 5;
+const NUM_STEPS = (MAX - MIN) / STEP;
+const STEP_WIDTH = (TRACK_WIDTH - THUMB_SIZE) / NUM_STEPS;
 
 type BudgetSliderProps = {
-  accessibilityStep?: number;
-  maximum?: number;
-  minimum?: number;
   onChange: (value: number) => void;
   onInteractionEnd?: () => void;
   onInteractionStart?: () => void;
   value: number;
 };
 
+function valueToStep(value: number) {
+  return Math.max(
+    0,
+    Math.min(NUM_STEPS, Math.round((value - MIN) / STEP)),
+  );
+}
+
 export function BudgetSlider({
-  accessibilityStep = 5,
-  maximum = 150,
-  minimum = 25,
   onChange,
   onInteractionEnd,
   onInteractionStart,
   value,
 }: BudgetSliderProps) {
-  const usableWidth = TRACK_WIDTH - THUMB_SIZE;
-  const [thumbX] = useState(
-    () => new Animated.Value(valueToPosition(value, minimum, maximum)),
-  );
-  const [controller] = useState(() => {
-    let dragging = false;
-    let gestureStartX = valueToPosition(value, minimum, maximum);
-    const clampX = (x: number) => Math.max(0, Math.min(usableWidth, x));
-    const updateX = (x: number) => {
-      const nextX = clampX(x);
-      thumbX.setValue(nextX);
-      const nextValue =
-        minimum + (nextX / usableWidth) * (maximum - minimum);
-      onChange(nextValue);
-    };
-    const endInteraction = () => {
-      dragging = false;
-      onInteractionEnd?.();
-    };
-    const responder = PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponderCapture: () => true,
-      onPanResponderGrant: (event) => {
-        dragging = true;
-        thumbX.stopAnimation();
-        gestureStartX = clampX(
-          event.nativeEvent.locationX - THUMB_SIZE / 2,
-        );
-        updateX(gestureStartX);
-      },
-      onPanResponderMove: (_event, gestureState) =>
-        updateX(gestureStartX + gestureState.dx),
-      onPanResponderRelease: endInteraction,
-      onPanResponderTerminate: endInteraction,
-      onPanResponderTerminationRequest: () => false,
-      onShouldBlockNativeResponder: () => true,
-      onStartShouldSetPanResponder: () => true,
-      onStartShouldSetPanResponderCapture: () => true,
-    });
+  const initialStep = valueToStep(value);
+  const position = useSharedValue(initialStep * STEP_WIDTH);
+  const start = useSharedValue(initialStep * STEP_WIDTH);
+  const lastStep = useSharedValue(initialStep);
 
-    return {
-      isDragging: () => dragging,
-      panHandlers: responder.panHandlers,
-    };
-  });
+  const selectStep = (stepIndex: number) => {
+    onChange(MIN + stepIndex * STEP);
+    Haptics.selectionAsync().catch(() => undefined);
+  };
+  const beginInteraction = () => onInteractionStart?.();
+  const endInteraction = () => onInteractionEnd?.();
 
   useEffect(() => {
-    if (controller.isDragging()) return;
-    const animation = Animated.timing(thumbX, {
-      duration: 120,
-      toValue: valueToPosition(value, minimum, maximum),
-      useNativeDriver: true,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [controller, maximum, minimum, thumbX, value]);
+    const nextStep = valueToStep(value);
+    lastStep.set(nextStep);
+    position.set(nextStep * STEP_WIDTH);
+  }, [lastStep, position, value]);
 
-  const fillScaleX = thumbX.interpolate({
-    inputRange: [0, usableWidth],
-    outputRange: [
-      THUMB_SIZE / 2 / TRACK_WIDTH,
-      (usableWidth + THUMB_SIZE / 2) / TRACK_WIDTH,
-    ],
-  });
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-2, 2])
+    .failOffsetY([-12, 12])
+    .onBegin(() => {
+      start.set(position.get());
+      runOnJS(beginInteraction)();
+    })
+    .onUpdate((event) => {
+      const raw = start.get() + event.translationX;
+      const clamped = Math.max(
+        0,
+        Math.min(TRACK_WIDTH - THUMB_SIZE, raw),
+      );
+      const nextStep = Math.max(
+        0,
+        Math.min(NUM_STEPS, Math.round(clamped / STEP_WIDTH)),
+      );
+
+      position.set(nextStep * STEP_WIDTH);
+      if (nextStep !== lastStep.get()) {
+        lastStep.set(nextStep);
+        runOnJS(selectStep)(nextStep);
+      }
+    })
+    .onFinalize(() => {
+      runOnJS(endInteraction)();
+    });
+
+  const thumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: position.get() }],
+  }));
+  const fillStyle = useAnimatedStyle(() => ({
+    width: position.get() + THUMB_SIZE / 2,
+  }));
+
+  const updateFromAccessibility = (direction: 1 | -1) => {
+    const nextStep = Math.max(
+      0,
+      Math.min(NUM_STEPS, valueToStep(value) + direction),
+    );
+    selectStep(nextStep);
+  };
 
   return (
-    <View
-      accessible
-      accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
-      accessibilityRole="adjustable"
-      accessibilityValue={{
-        max: maximum,
-        min: minimum,
-        now: value,
-        text: `€${value} per week`,
-      }}
-      onAccessibilityAction={(event) =>
-        onChange(
-          event.nativeEvent.actionName === "increment"
-            ? Math.min(maximum, value + accessibilityStep)
-            : Math.max(minimum, value - accessibilityStep),
-        )
-      }
-      onTouchStart={onInteractionStart}
-      style={styles.wrapper}
-      {...controller.panHandlers}
-    >
-      <View style={styles.track}>
+    <GestureDetector gesture={panGesture}>
+      <View
+        accessible
+        accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+        accessibilityRole="adjustable"
+        accessibilityValue={{
+          max: MAX,
+          min: MIN,
+          now: value,
+          text: `€${value} per week`,
+        }}
+        onAccessibilityAction={(event) =>
+          updateFromAccessibility(
+            event.nativeEvent.actionName === "increment" ? 1 : -1,
+          )
+        }
+        style={styles.container}
+      >
+        <View style={styles.track}>
+          <Animated.View pointerEvents="none" style={[styles.fill, fillStyle]} />
+        </View>
         <Animated.View
           pointerEvents="none"
-          style={[styles.fill, { transform: [{ scaleX: fillScaleX }] }]}
+          style={[styles.thumb, thumbStyle]}
         />
       </View>
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.thumb, { transform: [{ translateX: thumbX }] }]}
-      />
-    </View>
+    </GestureDetector>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { height: THUMB_SIZE, justifyContent: "center", width: TRACK_WIDTH },
+  container: {
+    height: THUMB_SIZE,
+    justifyContent: "center",
+    width: TRACK_WIDTH,
+  },
   track: {
     backgroundColor: colors.surface,
-    borderCurve: "continuous",
-    borderRadius: 999,
-    height: 16,
+    borderRadius: 99,
+    height: TRACK_HEIGHT,
     overflow: "hidden",
     width: TRACK_WIDTH,
   },
   fill: {
     backgroundColor: colors.accent,
-    borderCurve: "continuous",
-    borderRadius: 999,
-    height: 16,
-    transformOrigin: "left center",
-    width: TRACK_WIDTH,
+    borderRadius: 99,
+    height: TRACK_HEIGHT,
   },
   thumb: {
     backgroundColor: colors.surface,
     borderColor: colors.accent,
-    borderCurve: "continuous",
-    borderRadius: 999,
+    borderRadius: THUMB_SIZE / 2,
     borderWidth: 4,
     height: THUMB_SIZE,
     left: 0,

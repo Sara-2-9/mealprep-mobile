@@ -2,9 +2,11 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  BackHandler,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -23,6 +25,7 @@ import type { MealPlan } from "@/domain/meal-plan";
 
 const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 const DAY_PITCH = 51;
+const CARD_GAP = 12;
 
 function CostSkeleton() {
   const [opacity] = useState(() => new Animated.Value(1));
@@ -56,15 +59,11 @@ type MealPageProps = {
 function MealPage({ cardWidth, index, meal, pageStep, scrollX }: MealPageProps) {
   const inputRange = [(index - 1) * pageStep, index * pageStep, (index + 1) * pageStep];
   const opacity = scrollX.interpolate({ extrapolate: "clamp", inputRange, outputRange: [0.72, 1, 0.72] });
-  const scale = scrollX.interpolate({ extrapolate: "clamp", inputRange, outputRange: [0.96, 1, 0.96] });
 
   return (
     <View style={[styles.page, { width: pageStep }]}>
       <Animated.View
-        style={[
-          styles.planCard,
-          { opacity, transform: [{ scale }], width: cardWidth },
-        ]}
+        style={[styles.planCard, { opacity, width: cardWidth }]}
       >
         <MealDetails meal={meal} />
       </Animated.View>
@@ -77,12 +76,22 @@ export function MealPlanScreen() {
   const { reset } = useMealPlanWizard();
   const { width: viewportWidth } = useWindowDimensions();
   const cardWidth = Math.min(337, viewportWidth - 40);
-  const pageStep = cardWidth + 12;
+  const pageStep = cardWidth + CARD_GAP;
   const sideInset = (viewportWidth - cardWidth) / 2;
   const [activeDay, setActiveDay] = useState(0);
   const { data, error, retry, status } = useMealPlan();
   const pagerRef = useRef<ScrollView>(null);
   const [scrollX] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => true,
+    );
+    return () => subscription.remove();
+  }, []);
+
   const onScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
     listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const nextDay = Math.max(0, Math.min(shortDays.length - 1, Math.round(event.nativeEvent.contentOffset.x / pageStep)));
@@ -196,7 +205,7 @@ export function MealPlanScreen() {
           style={styles.pager}
           contentContainerStyle={{
             paddingLeft: sideInset,
-            paddingRight: Math.max(0, sideInset - 12),
+            paddingRight: Math.max(0, sideInset - CARD_GAP),
           }}
         >
           {data.meals.map((meal, index) => (
