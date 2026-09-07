@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "./app-text";
 
+import { ChevronLeftIcon } from "@/components/icons/app-icons";
 import { colors } from "@/design-system/tokens";
 import { typeStyles } from "@/design-system/typography";
 
@@ -14,10 +15,14 @@ export function StepHeader({ progress, title }: StepHeaderProps) {
   return (
     <View style={styles.container}>
       <View style={styles.progressRow}>
-        <Pressable accessibilityLabel="Go back" accessibilityRole="button" hitSlop={10} onPress={back} style={styles.back}>
-          <View style={styles.chevronFrame}>
-            <View style={styles.chevron} />
-          </View>
+        <Pressable
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          hitSlop={10}
+          onPress={back}
+          style={styles.back}
+        >
+          <ChevronLeftIcon />
         </Pressable>
         <View
           accessibilityRole="progressbar"
@@ -29,19 +34,44 @@ export function StepHeader({ progress, title }: StepHeaderProps) {
           </View>
         </View>
       </View>
-      <AppText style={styles.title} weight="semibold">{title}</AppText>
+      <AppText style={styles.title} weight="semibold">
+        {title}
+      </AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { gap: 20, width: "100%" },
-  progressRow: { alignItems: "center", flexDirection: "row", gap: 10, height: 28 },
-  back: { alignItems: "center", backgroundColor: colors.surface, borderCurve: "continuous", borderRadius: 99, height: 28, justifyContent: "center", width: 28 },
-  chevronFrame: { alignItems: "center", height: 20, justifyContent: "center", width: 20 },
-  chevron: { borderBottomColor: colors.ink, borderBottomWidth: 1.7, borderRightColor: colors.ink, borderRightWidth: 1.7, height: 8, marginLeft: 3, transform: [{ rotate: "135deg" }], width: 8 },
-  track: { backgroundColor: colors.surface, borderCurve: "continuous", borderRadius: 999, height: 20, overflow: "hidden", width: 315 },
-  fill: { backgroundColor: colors.accent, borderCurve: "continuous", borderRadius: 999, height: 20 },
+  progressRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+    height: 28,
+  },
+  back: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderCurve: "continuous",
+    borderRadius: 99,
+    height: 28,
+    justifyContent: "center",
+    width: 28,
+  },
+  track: {
+    backgroundColor: colors.surface,
+    borderCurve: "continuous",
+    borderRadius: 999,
+    height: 20,
+    overflow: "hidden",
+    width: 315,
+  },
+  fill: {
+    backgroundColor: colors.accent,
+    borderCurve: "continuous",
+    borderRadius: 999,
+    height: 20,
+  },
   highlight: {
     backgroundColor: colors.white,
     borderCurve: "continuous",
