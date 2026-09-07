@@ -4,12 +4,13 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "./app-text";
 
 import { ChevronLeftIcon } from "@/components/icons/app-icons";
-import { colors } from "@/design-system/tokens";
 import { typeStyles } from "@/design-system/typography";
+import { useColors } from "@/hooks/use-colors";
 
 type StepHeaderProps = { title: string; progress: 0.25 | 0.5 | 0.75 };
 
 export function StepHeader({ progress, title }: StepHeaderProps) {
+  const colors = useColors();
   const { back } = useRouter();
 
   return (
@@ -20,21 +21,28 @@ export function StepHeader({ progress, title }: StepHeaderProps) {
           accessibilityRole="button"
           hitSlop={10}
           onPress={back}
-          style={styles.back}
+          style={[styles.back, { backgroundColor: colors.surface }]}
         >
           <ChevronLeftIcon />
         </Pressable>
         <View
           accessibilityRole="progressbar"
           accessibilityValue={{ max: 100, min: 0, now: progress * 100 }}
-          style={styles.track}
+          style={[styles.track, { backgroundColor: colors.surface }]}
         >
-          <View style={[styles.fill, { width: `${progress * 100}%` }]}>
-            <View style={styles.highlight} />
+          <View
+            style={[
+              styles.fill,
+              { backgroundColor: colors.accent, width: `${progress * 100}%` },
+            ]}
+          >
+            <View
+              style={[styles.highlight, { backgroundColor: colors.onAccent }]}
+            />
           </View>
         </View>
       </View>
-      <AppText style={styles.title} weight="semibold">
+      <AppText style={[styles.title, { color: colors.ink }]} weight="semibold">
         {title}
       </AppText>
     </View>
@@ -51,7 +59,6 @@ const styles = StyleSheet.create({
   },
   back: {
     alignItems: "center",
-    backgroundColor: colors.surface,
     borderCurve: "continuous",
     borderRadius: 99,
     height: 28,
@@ -59,7 +66,6 @@ const styles = StyleSheet.create({
     width: 28,
   },
   track: {
-    backgroundColor: colors.surface,
     borderCurve: "continuous",
     borderRadius: 999,
     height: 20,
@@ -67,13 +73,11 @@ const styles = StyleSheet.create({
     width: 315,
   },
   fill: {
-    backgroundColor: colors.accent,
     borderCurve: "continuous",
     borderRadius: 999,
     height: 20,
   },
   highlight: {
-    backgroundColor: colors.white,
     borderCurve: "continuous",
     borderRadius: 999,
     height: 6,
@@ -83,5 +87,5 @@ const styles = StyleSheet.create({
     right: 12,
     top: 3,
   },
-  title: { ...typeStyles.stepTitle, color: colors.ink },
+  title: { ...typeStyles.stepTitle },
 });

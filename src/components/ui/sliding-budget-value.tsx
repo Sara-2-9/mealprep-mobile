@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 
 import { fontFamilies } from "@/design-system/typography";
+import { useColors } from "@/hooks/use-colors";
 
 type SlidingBudgetValueProps = { value: number };
 
 export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
+  const colors = useColors();
   const [gradientProgress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -28,8 +30,10 @@ export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
     outputRange: [0, 300],
   });
   const mask = (
-    <View style={styles.mask}>
-      <Animated.Text style={styles.value}>€{value}</Animated.Text>
+    <View style={[styles.mask, { backgroundColor: colors.transparent }]}>
+      <Animated.Text style={[styles.value, { color: colors.mask }]}>
+        €{value}
+      </Animated.Text>
     </View>
   );
 
@@ -44,7 +48,7 @@ export function SlidingBudgetValue({ value }: SlidingBudgetValueProps) {
         style={[styles.gradientTrack, { transform: [{ translateX }] }]}
       >
         <LinearGradient
-          colors={["#1A1A1A", "#34C759", "#1A1A1A", "#34C759", "#1A1A1A"]}
+          colors={colors.budgetShine}
           end={{ x: 1, y: 0 }}
           locations={[0, 0.25, 0.5, 0.75, 1]}
           start={{ x: 0, y: 0 }}
@@ -65,9 +69,8 @@ const styles = StyleSheet.create({
     top: 0,
     width: 600,
   },
-  mask: { backgroundColor: "transparent", flex: 1, overflow: "hidden" },
+  mask: { flex: 1, overflow: "hidden" },
   value: {
-    color: "#000",
     fontFamily: fontFamilies.semibold,
     fontSize: 96,
     includeFontPadding: false,

@@ -8,7 +8,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 
-import { colors } from "@/design-system/tokens";
+import { useColors } from "@/hooks/use-colors";
 
 const TRACK_WIDTH = 345;
 const TRACK_HEIGHT = 16;
@@ -27,10 +27,7 @@ type BudgetSliderProps = {
 };
 
 function valueToStep(value: number) {
-  return Math.max(
-    0,
-    Math.min(NUM_STEPS, Math.round((value - MIN) / STEP)),
-  );
+  return Math.max(0, Math.min(NUM_STEPS, Math.round((value - MIN) / STEP)));
 }
 
 export function BudgetSlider({
@@ -39,6 +36,7 @@ export function BudgetSlider({
   onInteractionStart,
   value,
 }: BudgetSliderProps) {
+  const colors = useColors();
   const initialStep = valueToStep(value);
   const position = useSharedValue(initialStep * STEP_WIDTH);
   const start = useSharedValue(initialStep * STEP_WIDTH);
@@ -66,10 +64,7 @@ export function BudgetSlider({
     })
     .onUpdate((event) => {
       const raw = start.get() + event.translationX;
-      const clamped = Math.max(
-        0,
-        Math.min(TRACK_WIDTH - THUMB_SIZE, raw),
-      );
+      const clamped = Math.max(0, Math.min(TRACK_WIDTH - THUMB_SIZE, raw));
       const nextStep = Math.max(
         0,
         Math.min(NUM_STEPS, Math.round(clamped / STEP_WIDTH)),
@@ -119,12 +114,19 @@ export function BudgetSlider({
         }
         style={styles.container}
       >
-        <View style={styles.track}>
-          <Animated.View pointerEvents="none" style={[styles.fill, fillStyle]} />
+        <View style={[styles.track, { backgroundColor: colors.surface }]}>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.fill, { backgroundColor: colors.accent }, fillStyle]}
+          />
         </View>
         <Animated.View
           pointerEvents="none"
-          style={[styles.thumb, thumbStyle]}
+          style={[
+            styles.thumb,
+            { backgroundColor: colors.surface, borderColor: colors.accent },
+            thumbStyle,
+          ]}
         />
       </View>
     </GestureDetector>
@@ -138,20 +140,16 @@ const styles = StyleSheet.create({
     width: TRACK_WIDTH,
   },
   track: {
-    backgroundColor: colors.surface,
     borderRadius: 99,
     height: TRACK_HEIGHT,
     overflow: "hidden",
     width: TRACK_WIDTH,
   },
   fill: {
-    backgroundColor: colors.accent,
     borderRadius: 99,
     height: TRACK_HEIGHT,
   },
   thumb: {
-    backgroundColor: colors.surface,
-    borderColor: colors.accent,
     borderRadius: THUMB_SIZE / 2,
     borderWidth: 4,
     height: THUMB_SIZE,

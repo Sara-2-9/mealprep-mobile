@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/ui/app-text";
 import { emojiAssets } from "@/design-system/emoji-assets";
-import { colors } from "@/design-system/tokens";
+import { useColors } from "@/hooks/use-colors";
 
 type SelectionCardProps = {
   emoji?: string;
@@ -18,12 +18,23 @@ export function SelectionCard({
   onPress,
   selected,
 }: SelectionCardProps) {
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       onPress={onPress}
-      style={[styles.card, selected && styles.selected]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.transparent,
+        },
+        selected && {
+          backgroundColor: colors.selected,
+          borderColor: colors.accent,
+        },
+      ]}
     >
       {emoji ? (
         <View style={[styles.emojiDisc, selected && styles.selectedDisc]}>
@@ -34,14 +45,21 @@ export function SelectionCard({
               style={styles.emojiImage}
             />
           ) : (
-            <AppText style={styles.emojiText} weight="medium">
+            <AppText
+              style={[styles.emojiText, { color: colors.ink }]}
+              weight="medium"
+            >
               {emoji}
             </AppText>
           )}
         </View>
       ) : null}
       <AppText
-        style={[styles.label, !emoji && styles.centeredLabel]}
+        style={[
+          styles.label,
+          { color: colors.ink },
+          !emoji && styles.centeredLabel,
+        ]}
         weight="medium"
       >
         {label}
@@ -53,8 +71,6 @@ export function SelectionCard({
 const styles = StyleSheet.create({
   card: {
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderColor: "transparent",
     borderCurve: "continuous",
     borderRadius: 20,
     borderWidth: 4,
@@ -62,7 +78,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "47.73%",
   },
-  selected: { backgroundColor: "#E8F9EC", borderColor: colors.accent },
   emojiDisc: {
     alignItems: "center",
     height: 36,
@@ -71,7 +86,7 @@ const styles = StyleSheet.create({
   },
   selectedDisc: { transform: [{ scale: 1.06 }] },
   emojiImage: { height: 34, width: 34 },
-  emojiText: { color: colors.ink, fontSize: 32, lineHeight: 36 },
-  label: { color: colors.ink, fontSize: 16, lineHeight: 22, marginTop: 2 },
+  emojiText: { fontSize: 32, lineHeight: 36 },
+  label: { fontSize: 16, lineHeight: 22, marginTop: 2 },
   centeredLabel: { marginTop: 0, textAlign: "center" },
 });

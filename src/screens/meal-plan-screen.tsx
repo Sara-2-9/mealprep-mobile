@@ -18,9 +18,9 @@ import { AppText } from "@/components/ui/app-text";
 import { MealDetails } from "@/components/ui/meal-details";
 import { MealPlanLoading } from "@/components/ui/meal-plan-loading";
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { colors } from "@/design-system/tokens";
 import { useMealPlan } from "@/features/meal-plan/use-meal-plan";
 import { useMealPlanWizard } from "@/features/wizard/wizard-context";
+import { useColors } from "@/hooks/use-colors";
 import type { MealPlan } from "@/domain/meal-plan";
 
 const shortDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -28,12 +28,21 @@ const DAY_PITCH = 51;
 const CARD_GAP = 12;
 
 function CostSkeleton() {
+  const colors = useColors();
   const [opacity] = useState(() => new Animated.Value(1));
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { duration: 650, toValue: 0.35, useNativeDriver: true }),
-        Animated.timing(opacity, { duration: 650, toValue: 1, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          duration: 650,
+          toValue: 0.35,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          duration: 650,
+          toValue: 1,
+          useNativeDriver: true,
+        }),
       ]),
     );
     animation.start();
@@ -43,7 +52,10 @@ function CostSkeleton() {
   return (
     <Animated.View
       accessibilityLabel="Estimated cost loading"
-      style={[styles.costSkeleton, { opacity }]}
+      style={[
+        styles.costSkeleton,
+        { backgroundColor: colors.surface, opacity },
+      ]}
     />
   );
 }
@@ -56,14 +68,32 @@ type MealPageProps = {
   scrollX: Animated.Value;
 };
 
-function MealPage({ cardWidth, index, meal, pageStep, scrollX }: MealPageProps) {
-  const inputRange = [(index - 1) * pageStep, index * pageStep, (index + 1) * pageStep];
-  const opacity = scrollX.interpolate({ extrapolate: "clamp", inputRange, outputRange: [0.72, 1, 0.72] });
+function MealPage({
+  cardWidth,
+  index,
+  meal,
+  pageStep,
+  scrollX,
+}: MealPageProps) {
+  const colors = useColors();
+  const inputRange = [
+    (index - 1) * pageStep,
+    index * pageStep,
+    (index + 1) * pageStep,
+  ];
+  const opacity = scrollX.interpolate({
+    extrapolate: "clamp",
+    inputRange,
+    outputRange: [0.72, 1, 0.72],
+  });
 
   return (
     <View style={[styles.page, { width: pageStep }]}>
       <Animated.View
-        style={[styles.planCard, { opacity, width: cardWidth }]}
+        style={[
+          styles.planCard,
+          { backgroundColor: colors.card, opacity, width: cardWidth },
+        ]}
       >
         <MealDetails meal={meal} />
       </Animated.View>
@@ -72,6 +102,7 @@ function MealPage({ cardWidth, index, meal, pageStep, scrollX }: MealPageProps) 
 }
 
 export function MealPlanScreen() {
+  const colors = useColors();
   const { replace } = useRouter();
   const { reset } = useMealPlanWizard();
   const { width: viewportWidth } = useWindowDimensions();
@@ -92,13 +123,24 @@ export function MealPlanScreen() {
     return () => subscription.remove();
   }, []);
 
-  const onScroll = Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-    listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const nextDay = Math.max(0, Math.min(shortDays.length - 1, Math.round(event.nativeEvent.contentOffset.x / pageStep)));
-      setActiveDay((currentDay) => (currentDay === nextDay ? currentDay : nextDay));
+  const onScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+    {
+      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const nextDay = Math.max(
+          0,
+          Math.min(
+            shortDays.length - 1,
+            Math.round(event.nativeEvent.contentOffset.x / pageStep),
+          ),
+        );
+        setActiveDay((currentDay) =>
+          currentDay === nextDay ? currentDay : nextDay,
+        );
+      },
+      useNativeDriver: true,
     },
-    useNativeDriver: true,
-  });
+  );
   const indicatorTranslateX = scrollX.interpolate({
     extrapolate: "clamp",
     inputRange: [0, pageStep * (shortDays.length - 1)],
@@ -114,7 +156,10 @@ export function MealPlanScreen() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.screen}>
+    <SafeAreaView
+      edges={["top"]}
+      style={[styles.screen, { backgroundColor: colors.accent }]}
+    >
       <View style={styles.headerRow}>
         <Pressable
           accessibilityLabel="Start over"
@@ -122,31 +167,46 @@ export function MealPlanScreen() {
           hitSlop={10}
           onPress={startOver}
         >
-          <AppText style={styles.restart}>↻</AppText>
+          <AppText style={[styles.restart, { color: colors.ink }]}>↻</AppText>
         </Pressable>
-        <AppText style={styles.title} weight="semibold">
+        <AppText
+          style={[styles.title, { color: colors.ink }]}
+          weight="semibold"
+        >
           Bon appetit!
         </AppText>
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.costCard}>
-        <AppText style={styles.costLabel} weight="medium">
+      <View style={[styles.costCard, { backgroundColor: colors.card }]}>
+        <AppText
+          style={[styles.costLabel, { color: colors.muted }]}
+          weight="medium"
+        >
           Est. cost
         </AppText>
         <View style={styles.costRow}>
           {status === "loading" ? <CostSkeleton /> : null}
           {status === "success" ? (
-            <AppText style={styles.cost} weight="medium">
+            <AppText
+              style={[styles.cost, { color: colors.ink }]}
+              weight="medium"
+            >
               €{data.estimatedCost.toFixed(0)}
             </AppText>
           ) : null}
           {status === "error" ? (
-            <AppText style={styles.cost} weight="medium">
+            <AppText
+              style={[styles.cost, { color: colors.ink }]}
+              weight="medium"
+            >
               —
             </AppText>
           ) : null}
-          <AppText style={styles.perWeek} weight="medium">
+          <AppText
+            style={[styles.perWeek, { color: colors.ink }]}
+            weight="medium"
+          >
             / week
           </AppText>
         </View>
@@ -155,12 +215,21 @@ export function MealPlanScreen() {
       <View style={styles.days}>
         <View pointerEvents="none" style={styles.dayBackgrounds}>
           {shortDays.map((day) => (
-            <View key={day} style={styles.dayBackground} />
+            <View
+              key={day}
+              style={[styles.dayBackground, { backgroundColor: colors.card }]}
+            />
           ))}
         </View>
         <Animated.View
           pointerEvents="none"
-          style={[styles.dayIndicator, { transform: [{ translateX: indicatorTranslateX }] }]}
+          style={[
+            styles.dayIndicator,
+            {
+              backgroundColor: colors.activeDayCell,
+              transform: [{ translateX: indicatorTranslateX }],
+            },
+          ]}
         />
         {shortDays.map((day, index) => (
           <Pressable
@@ -174,7 +243,10 @@ export function MealPlanScreen() {
             <AppText
               style={[
                 styles.dayText,
-                activeDay === index && styles.activeDayText,
+                {
+                  color:
+                    activeDay === index ? colors.activeDayLabel : colors.ink,
+                },
               ]}
               weight="medium"
             >
@@ -185,7 +257,7 @@ export function MealPlanScreen() {
       </View>
 
       {status === "loading" ? (
-        <View style={styles.loadingCard}>
+        <View style={[styles.loadingCard, { backgroundColor: colors.card }]}>
           <MealPlanLoading />
         </View>
       ) : null}
@@ -221,12 +293,18 @@ export function MealPlanScreen() {
         </Animated.ScrollView>
       ) : null}
       {status === "error" ? (
-        <View style={styles.loadingCard}>
+        <View style={[styles.loadingCard, { backgroundColor: colors.card }]}>
           <View style={styles.error}>
-            <AppText style={styles.errorTitle} weight="semibold">
+            <AppText
+              style={[styles.errorTitle, { color: colors.ink }]}
+              weight="semibold"
+            >
               We couldn’t build your plan.
             </AppText>
-            <AppText accessibilityLiveRegion="polite" style={styles.errorCopy}>
+            <AppText
+              accessibilityLiveRegion="polite"
+              style={[styles.errorCopy, { color: colors.muted }]}
+            >
               {error}
             </AppText>
             <PrimaryButton label="Try again" onPress={retry} />
@@ -238,7 +316,7 @@ export function MealPlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { alignItems: "center", backgroundColor: colors.accent, flex: 1 },
+  screen: { alignItems: "center", flex: 1 },
   headerRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -248,12 +326,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     width: "100%",
   },
-  restart: { color: colors.ink, fontSize: 26, lineHeight: 32, width: 28 },
-  title: { color: colors.ink, fontSize: 40, lineHeight: 56 },
+  restart: { fontSize: 26, lineHeight: 32, width: 28 },
+  title: { fontSize: 40, lineHeight: 56 },
   headerSpacer: { width: 28 },
   costCard: {
     alignItems: "center",
-    backgroundColor: colors.white,
     borderCurve: "continuous",
     borderRadius: 16,
     height: 72,
@@ -261,17 +338,16 @@ const styles = StyleSheet.create({
     marginTop: 12,
     width: 353,
   },
-  costLabel: { color: colors.muted, fontSize: 16, lineHeight: 22 },
+  costLabel: { fontSize: 16, lineHeight: 22 },
   costRow: { alignItems: "baseline", flexDirection: "row", gap: 4 },
-  cost: { color: colors.ink, fontSize: 24, lineHeight: 34 },
+  cost: { fontSize: 24, lineHeight: 34 },
   costSkeleton: {
-    backgroundColor: colors.surface,
     borderCurve: "continuous",
     borderRadius: 999,
     height: 24,
     width: 54,
   },
-  perWeek: { color: colors.ink, fontSize: 16, lineHeight: 22 },
+  perWeek: { fontSize: 16, lineHeight: 22 },
   days: {
     flexDirection: "row",
     gap: 4,
@@ -296,14 +372,12 @@ const styles = StyleSheet.create({
     top: 0,
   },
   dayBackground: {
-    backgroundColor: colors.white,
     borderCurve: "continuous",
     borderRadius: 12,
     height: 40,
     width: 47,
   },
   dayIndicator: {
-    backgroundColor: colors.ink,
     borderCurve: "continuous",
     borderRadius: 12,
     height: 40,
@@ -313,10 +387,8 @@ const styles = StyleSheet.create({
     width: 47,
     zIndex: 1,
   },
-  dayText: { color: colors.ink, fontSize: 14, lineHeight: 20 },
-  activeDayText: { color: colors.white },
+  dayText: { fontSize: 14, lineHeight: 20 },
   loadingCard: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     flex: 1,
@@ -327,7 +399,6 @@ const styles = StyleSheet.create({
   pager: { flex: 1, marginTop: 32, width: "100%" },
   page: { alignItems: "flex-start", flex: 1 },
   planCard: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     flex: 1,
@@ -335,13 +406,11 @@ const styles = StyleSheet.create({
   },
   error: { flex: 1, gap: 14, justifyContent: "center", padding: 24 },
   errorTitle: {
-    color: colors.ink,
     fontSize: 24,
     lineHeight: 33,
     textAlign: "center",
   },
   errorCopy: {
-    color: colors.muted,
     fontSize: 15,
     lineHeight: 21,
     marginBottom: 12,

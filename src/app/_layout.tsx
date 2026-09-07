@@ -8,8 +8,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { WizardProvider } from "@/features/wizard/wizard-context";
 import { useAppFonts } from "@/hooks/use-app-fonts";
+import { useColors } from "@/hooks/use-colors";
 
 export default function RootLayout() {
+  const colors = useColors();
   const fontsLoaded = useAppFonts();
   if (!fontsLoaded) return null;
 
@@ -23,7 +25,7 @@ export default function RootLayout() {
               animation:
                 Platform.OS === "ios" ? "simple_push" : "ios_from_right",
               animationMatchesGesture: true,
-              contentStyle: { backgroundColor: "#FDFFFB" },
+              contentStyle: { backgroundColor: colors.canvas },
               fullScreenGestureEnabled: true,
               fullScreenGestureShadowEnabled: false,
               gestureDirection: "horizontal",
